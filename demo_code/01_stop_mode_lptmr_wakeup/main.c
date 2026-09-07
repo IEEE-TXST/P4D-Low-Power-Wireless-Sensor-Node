@@ -93,6 +93,6 @@ int main(void)
 
         g_wakeCount++;
         GPIO_TogglePinsOutput(BOARD_LED_RED_GPIO, 1U << BOARD_LED_RED_GPIO_PIN);
-        PRINTF("wake #%lu, elapsed ~%lu s\r\n", g_wakeCount, g_wakeCount * WAKE_PERIOD_SECONDS);
+        PRINTF("wake #%u, elapsed ~%u s\r\n", g_wakeCount, g_wakeCount * WAKE_PERIOD_SECONDS);
     }
 }
