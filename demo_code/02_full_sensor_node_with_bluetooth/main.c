@@ -13,6 +13,25 @@
  * only if stuck on the sensor reads, UART1/HC-05 wiring, or the packet
  * format specifically.
  */
+
+/*
+ * WHAT: Combines Session 1's sleep/wake power cycle with real sensor
+ * reads and wireless transmission: every 5 seconds, wake up, read the
+ * accelerometer and a light sensor, send both over Bluetooth to a laptop,
+ * then go back to sleep.
+ *
+ * HOW: The power-management functions (LLWU_IRQHandler, InitLptmrAndLlwu,
+ * EnterLlsUntilWake) are copied unchanged from Session 1; new here is
+ * reading two sensors right after waking, then transmitting them as a CSV
+ * line over UART1 to an HC-05 Bluetooth module, which forwards it
+ * wirelessly to a paired laptop running python/dashboard.py.
+ *
+ * WHY: This is the project's complete picture: a sensor node that spends
+ * nearly all its time asleep (drawing minimal current, as Session 1
+ * established) but still delivers a steady stream of live sensor data to
+ * a remote dashboard, the practical shape of a real battery-powered field
+ * sensor, IoT device, or environmental monitor.
+ */
 #include <stdio.h>
 #include "board.h"
 #include "pin_mux.h"
@@ -33,6 +52,11 @@
 #define HC05_BAUD_BPS 9600U /* must match whatever AT+UART=... set the module to; see manual Section 9 */
 
 /* ---------------- Power management: identical to Session 1 ---------------- */
+/* See 01_stop_mode_lptmr_wakeup/main.c for the full WHAT/HOW/WHY on why
+   LLS was chosen, why LPO/LPTMR/LLWU are wired together this way, and why
+   this ISR does the cleanup it does. Reproduced here unchanged since
+   Session 2 needs the exact same sleep/wake mechanism, just with real work
+   added after each wake. */
 
 void LLWU_IRQHandler(void)
 {
@@ -69,6 +93,9 @@ static void EnterLlsUntilWake(void)
 }
 
 /* ---------------- Accelerometer: reused verbatim from P1 ---------------- */
+/* Identical probe/configure/read logic to P1's accelerometer demo, P4-A's
+   command handlers, and P4-B's gamepad; see any of those for the full
+   register-level explanation. */
 
 static uint8_t g_accelAddr = 0U;
 static i2c_master_transfer_t g_accelXfer;
@@ -148,6 +175,9 @@ static void ReadAccelMg(int16_t *xMg, int16_t *yMg, int16_t *zMg)
 }
 
 /* ---------------- Light sensor stand-in: ADC0_SE23, reused from P1/P3 ---------------- */
+/* Same software-triggered polling ADC read as P1/P3/P4-A; a potentiometer
+   or photoresistor on this pin stands in for whatever real analog sensor
+   a deployed node would carry. */
 
 static void InitAdc(void)
 {
@@ -172,6 +202,14 @@ static uint16_t ReadLightCounts(void)
 
 /* ---------------- HC-05, over UART1 ---------------- */
 
+/*
+ * WHAT: Configures UART1 to talk to the HC-05 Bluetooth module at its
+ * configured baud rate, transmit-only.
+ * WHY: enableRx = false is deliberate, not an oversight: this node only
+ * ever sends sensor data outward, it never needs to receive anything back
+ * from the HC-05 or the paired laptop, so there's no reason to spend power
+ * or configuration on a receive path this firmware would never use.
+ */
 static void InitHc05Uart(void)
 {
     uart_config_t config;
@@ -182,6 +220,22 @@ static void InitHc05Uart(void)
     UART_Init(HC05_UART, &config, CLOCK_GetFreq(BUS_CLK));
 }
 
+/*
+ * WHAT: Formats one line of sensor data as plain CSV text and sends it
+ * over UART1 to the HC-05.
+ * HOW: snprintf builds "X,Y,Z,light\r\n" into a small stack buffer; the
+ * returned length (not a hardcoded size) is what gets passed to
+ * UART_WriteBlocking, so only the actual formatted bytes are transmitted,
+ * not the whole buffer including unused space.
+ * WHY: Checking `len > 0` before transmitting guards against snprintf
+ * signaling a formatting error (which it does by returning a negative
+ * value); skipping the UART write in that case avoids sending garbage over
+ * the air. Plain CSV, rather than a binary protocol like P4-A's, is the
+ * right choice here specifically because the HC-05 forwards these bytes
+   transparently through Bluetooth to a plain serial terminal or Python
+   script on the other end, where readable text is simpler to receive and
+   parse than a binary framing format would be.
+ */
 static void SendPacket(int16_t xMg, int16_t yMg, int16_t zMg, uint16_t lightCounts)
 {
     char line[48];
@@ -207,12 +261,31 @@ int main(void)
     ledConfig.outputLogic = 1U;
     GPIO_PinInit(BOARD_LED_RED_GPIO, BOARD_LED_RED_GPIO_PIN, &ledConfig);
 
+    /*
+     * WHAT: Brings up every subsystem once before the sleep/wake loop
+     * starts.
+     * WHY: All sensor and UART init happens BEFORE the first
+     * EnterLlsUntilWake call, same "get everything ready before the timer
+     * can fire" ordering P0/P1/P3 all followed; unlike those projects
+     * though, here it also matters that nothing in this init sequence
+     * itself needs to run again on every wake, only the read-and-send work
+     * inside the loop does.
+     */
     SMC_SetPowerModeProtection(SMC, kSMC_AllowPowerModeAll);
     InitLptmrAndLlwu();
     InitAccelerometer();
     InitAdc();
     InitHc05Uart();
 
+    /*
+     * WHAT: The full wake cycle: sleep, wake, toggle LED, read both
+     * sensors, transmit, repeat.
+     * WHY: The LED toggle happens immediately after EnterLlsUntilWake
+     * returns, before the (slower) sensor reads and UART transmission;
+     * that ordering means the LED gives an instant, low-latency visual
+     * confirmation that a wake just happened, independent of whether the
+     * sensor reads or Bluetooth send that follow succeed or take a while.
+     */
     for (;;)
     {
         int16_t xMg, yMg, zMg;

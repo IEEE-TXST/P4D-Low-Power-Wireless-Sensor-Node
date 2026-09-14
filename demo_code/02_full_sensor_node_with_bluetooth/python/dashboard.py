@@ -23,6 +23,21 @@ Pair the HC-05 with your laptop first (Section 9 of the manual); the
 paired module shows up as a normal serial port once paired, the same way
 any other Bluetooth serial device would.
 """
+# WHAT: A desktop companion to the P4-D sensor node firmware: reads its
+# once-every-5-seconds CSV transmissions over a Bluetooth-backed serial
+# port and plots accelerometer X/Y/Z and light level live.
+#
+# HOW: pyserial connects to the HC-05's paired virtual COM port exactly as
+# if it were a wired serial connection (Bluetooth serial profiles are
+# designed to look like a normal serial port to software); each received
+# line is parsed and appended to rolling buffers, redrawn on a timer.
+#
+# WHY: This script's whole design is shaped by the sensor node being
+# asleep almost all the time: unlike P3's continuous 10kHz stream or P4-A's
+# request/response protocol, here a new data point only exists once every
+# 5 seconds, so a much longer read timeout (6 seconds, see below) and a
+# much coarser update interval are both correct here where they'd be wrong
+# for those other projects' scripts.
 import sys
 import collections
 
@@ -46,6 +61,14 @@ def parse_args():
 
 def main():
     port, baud = parse_args()
+    # WHAT: Opens the Bluetooth serial connection with a 6-second read
+    # timeout.
+    # WHY: 6 seconds, deliberately longer than the board's 5-second wake
+    # period: a read that waits the full timeout without receiving
+    # anything is expected and normal here (the board just hasn't woken up
+    # yet), not a sign anything is wrong; a short timeout tuned for a
+    # continuously-streaming device (like P3's plot script) would report
+    # constant, spurious "timeouts" against this intentionally-sleepy node.
     ser = serial.Serial(port, baud, timeout=6.0)  # generous timeout: the board only speaks once every 5 s
 
     x_data = collections.deque(maxlen=WINDOW_POINTS)
@@ -74,6 +97,14 @@ def main():
         None on timeout (the board hasn't woken up yet) rather than
         raising, since a wake-every-5-seconds device is expected to go
         quiet between transmissions."""
+        # WHAT: Reads one line, waiting up to the 6-second timeout, and
+        # returns it as text, or None if nothing arrived or it couldn't be
+        # decoded.
+        # WHY: A plain timeout (readline returning empty) is treated as a
+        # completely normal, expected outcome here, not an error to report,
+        # since it just means the board is still asleep; that's a direct
+        # consequence of this device's sleep-most-of-the-time design (see
+        # the firmware's own EnterLlsUntilWake).
         raw = ser.readline()
         if not raw:
             return None
@@ -83,6 +114,15 @@ def main():
             return None
 
     def update(_frame):
+        # WHAT: Called on a timer; checks for one new line and, if a valid
+        # one arrived, appends its four values to the rolling buffers and
+        # redraws both plots.
+        # HOW: Parses exactly 4 comma-separated integers (X, Y, Z, light);
+        # anything else (wrong count, non-numeric) is treated as "not a
+        # data line" and silently ignored, the same permissive-parsing
+        # approach P3's and P4-A's plotting scripts use, for the same
+        # reason: a corrupted or partial line over a live link shouldn't
+        # crash the dashboard.
         line = read_one_line()
         if line:
             parts = line.split(",")
@@ -109,6 +149,13 @@ def main():
 
     # interval matches roughly how often a new point could plausibly
     # arrive; read_one_line()'s own serial timeout does the real waiting.
+    # WHAT: Starts the redraw timer at 200ms, much faster than data
+    # actually arrives.
+    # WHY: This interval only controls how often the plot's event loop
+    # checks in, not how often real data shows up; read_one_line's own
+    # 6-second timeout is what actually paces new points. A short interval
+    # here just keeps the plot window responsive (e.g. to being resized or
+    # closed) between the infrequent real updates.
     ani = animation.FuncAnimation(fig, update, interval=200, blit=False, cache_frame_data=False)
     plt.tight_layout()
     plt.show()

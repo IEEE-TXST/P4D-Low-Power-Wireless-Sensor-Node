@@ -14,6 +14,26 @@
  * Reference only. Get the stop-mode/LPTMR/LLWU sequence working yourself
  * first; open this only if stuck.
  */
+
+/*
+ * WHAT: Sleeps in a deep low-power mode almost all the time, waking only
+ * once every 5 seconds to blink the LED and print a counter, then goes
+ * straight back to sleep.
+ *
+ * HOW: A low-power timer (LPTMR) that keeps running even while the CPU is
+ * asleep counts up to 5 seconds, then signals the LLWU (Low Leakage Wakeup
+ * Unit), which is what actually wakes the core back up from LLS mode; the
+ * main loop's only job is to enter that sleep mode, then react once woken.
+ *
+ * WHY: Every project so far in this series has assumed the board stays
+ * powered and awake continuously; a battery-powered field sensor can't
+ * afford that, most of its life should be spent drawing minimal current.
+ * LLS (Low Leakage Stop) was deliberately chosen over the even
+ * deeper VLLS mode because LLS keeps SRAM and register state intact and
+ * doesn't reset on wake, while still using the same LLWU wake mechanism
+ * the project spec calls for; see InitLptmrAndLlwu and EnterLlsUntilWake
+ * below for how that translates into actual register-level setup.
+ */
 #include "board.h"
 #include "pin_mux.h"
 #include "clock_config.h"
@@ -28,6 +48,20 @@
 
 static volatile uint32_t g_wakeCount = 0U;
 
+/*
+ * WHAT: Fires once the LLWU notices the LPTMR's wake event and has already
+ * brought the core back up out of LLS.
+ * HOW: Confirms the wakeup really was the LPTMR (not some other wakeup
+ * source sharing this same handler), then disables the LPTMR's interrupt,
+ * clears its compare flag, and stops it, resetting it to a clean state
+ * ready for the next EnterLlsUntilWake call.
+ * WHY: This ISR exists only because LLS (unlike plain Stop/VLPS) requires
+ * LLWU, not the LPTMR's own NVIC line, to actually notice the wakeup
+ * event and let the core resume. See the manual, Section 7. Note this
+ * handler does NOT do the LED toggle or PRINTF, that happens back in
+ * main()'s loop, right after SMC_SetPowerModeLls returns; this handler's
+ * only job is cleaning up the timer that caused the wake.
+ */
 void LLWU_IRQHandler(void)
 {
     /* This ISR exists only because LLS (unlike plain Stop/VLPS) requires
@@ -41,6 +75,19 @@ void LLWU_IRQHandler(void)
     }
 }
 
+/*
+ * WHAT: One-time setup: configures the LPTMR's clock source and period,
+ * and tells the LLWU to treat the LPTMR as a valid wakeup source.
+ * HOW: kLPTMR_PrescalerClock_1 selects LPO (a fixed, always-on 1kHz clock
+ * that, critically, keeps ticking even in LLS mode, unlike the chip's main
+ * system clocks); bypassing the prescaler means the timer counts LPO ticks
+ * directly, so setting the period in milliseconds is a simple
+ * multiplication rather than needing a divider calculation.
+ * WHY: The choice of LPO as the clock source isn't arbitrary, it's the
+ * one clock guaranteed to survive the CPU being asleep; using any of the
+ * chip's higher-speed clocks here would fail silently in LLS mode, since
+ * those clocks are exactly what LLS shuts down to save power.
+ */
 static void InitLptmrAndLlwu(void)
 {
     lptmr_config_t lptmrConfig;
@@ -55,6 +102,20 @@ static void InitLptmrAndLlwu(void)
     NVIC_EnableIRQ(LLWU_IRQn);
 }
 
+/*
+ * WHAT: Starts the LPTMR counting, then puts the chip into LLS mode until
+ * the LLWU wakes it back up.
+ * HOW: SMC_PreEnterStopModes/SMC_PostExitStopModes bracket the actual sleep
+ * call, handling SDK-internal bookkeeping around the transition;
+ * SMC_SetPowerModeLls(SMC) is the line that actually stops CPU execution,
+ * this function call doesn't return until LLWU_IRQHandler above has
+ * already run and the core has resumed.
+ * WHY: The comment on SMC_SetPowerModeLls's line is worth taking
+ * literally: from the CPU's perspective, this single function call can
+ * take 5 real seconds to return, with the CPU doing nothing at all for
+ * almost all of that time; that's the entire mechanism this project
+ * demonstrates, reframed as a single blocking function call.
+ */
 static void EnterLlsUntilWake(void)
 {
     LPTMR_EnableInterrupts(LPTMR0, kLPTMR_TimerInterruptEnable);
@@ -83,10 +144,28 @@ int main(void)
     GPIO_PinInit(BOARD_LED_RED_GPIO, BOARD_LED_RED_GPIO_PIN, &ledConfig);
 
     /* Must be called once before entering any power mode beyond RUN. */
+    /*
+     * WHAT: Explicitly allows the chip to enter any power mode.
+     * WHY: On this chip, low-power modes are disabled by default as a
+     * safety measure (so a program can't accidentally sleep and never
+     * come back without an explicit opt-in); without this call,
+     * SMC_SetPowerModeLls below would simply fail to actually enter LLS.
+     */
     SMC_SetPowerModeProtection(SMC, kSMC_AllowPowerModeAll);
 
     InitLptmrAndLlwu();
 
+    /*
+     * WHAT: Repeatedly sleeps for ~5 seconds, then wakes, blinks, and
+     * prints, forever.
+     * WHY: This loop is almost entirely "asleep": EnterLlsUntilWake blocks
+     * for nearly the entire 5-second period, and the three lines after it
+     * (incrementing the counter, toggling the LED, printing) take a
+     * negligible fraction of that time by comparison. This is the inverse
+     * of every earlier project's superloop, which was awake and looping
+     * continuously; here, being asleep as much as possible is the actual
+     * design goal.
+     */
     for (;;)
     {
         EnterLlsUntilWake();
