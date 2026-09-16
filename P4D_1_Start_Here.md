@@ -29,17 +29,31 @@ Same rule as every prior manual: a reference, not required reading. Build the sl
 
 Project leaders: bench-test both `demo_code/01_stop_mode_lptmr_wakeup/` and `demo_code/02_full_sensor_node_with_bluetooth/` on real hardware, with a real HC-05 module, before WS8. This project has no substitute for that bench test the way some earlier projects did: current draw during stop mode, LPTMR wake timing, and Bluetooth pairing all depend on real electrical and RF behavior that no amount of code review or compilation catches.
 
-**A note on accuracy:** this project's power-management sequence is adapted from NXP's own verified `demo_apps/power_manager` example, which exercises every power mode this chip supports; this project uses only the specific LLS-plus-LPTMR-plus-LLWU path from it. Confirming which of two possible `SMC_SetPowerModeLls()` function signatures actually applies to this chip required checking the chip's own compile-time feature flags directly, not assuming, since guessing wrong would have been a build error at best and a subtly wrong power sequence at worst. Section 20 has the full verification trail. The HC-05 module itself is external, third-party hardware with real variation across cheap clone boards; Section 9 is explicit about what's verified, standard behavior versus what a group needs to confirm against their own specific module.
+#### A note on accuracy
+
+This project's power-management sequence is adapted from NXP's own verified `demo_apps/power_manager` example, which exercises every power mode this chip supports; this project uses only the specific LLS-plus-LPTMR-plus-LLWU path from it.
+
+Confirming which of two possible `SMC_SetPowerModeLls()` function signatures actually applies to this chip required checking the chip's own compile-time feature flags directly, not assuming, since guessing wrong would have been a build error at best and a subtly wrong power sequence at worst. Section 20 has the full verification trail.
+
+The HC-05 module itself is external, third-party hardware with real variation across cheap clone boards; Section 9 is explicit about what's verified, standard behavior versus what a group needs to confirm against their own specific module.
 
 ---
 
 ## 0. Why This Session Exists
 
-Every prior project assumed the board stays powered and awake the whole time. Almost nothing that actually ships as a battery-powered product can afford that: a real wireless sensor node spends the overwhelming majority of its life asleep, waking only briefly to take a reading and report it, precisely because current drawn while asleep is current not drawn from a battery that has to last months or years. This project is the one place in the series where "does it work" and "does it work within a power budget" are both real, simultaneous requirements, and it deliberately combines P2's sleep/wake state-machine thinking with P1's sensor code to build something that looks and behaves like an actual commercial IoT device, not a simplified classroom version of one.
+Every prior project assumed the board stays powered and awake the whole time. Almost nothing that actually ships as a battery-powered product can afford that: a real wireless sensor node spends the overwhelming majority of its life asleep, waking only briefly to take a reading and report it, precisely because current drawn while asleep is current not drawn from a battery that has to last months or years.
+
+This project is the one place in the series where "does it work" and "does it work within a power budget" are both real, simultaneous requirements, and it deliberately combines P2's sleep/wake state-machine thinking with P1's sensor code to build something that looks and behaves like an actual commercial IoT device, not a simplified classroom version of one.
 
 ## 2. Purpose
 
-By the end of this project, every group has: a board that spends nearly all of its time in LLS, waking only every 5 seconds; a working LPTMR-plus-LLWU wakeup sequence with a measurable current drop confirmed on real hardware; an HC-05 module configured and paired with a laptop; a wake-read-transmit-sleep cycle sending live accelerometer and light readings over Bluetooth; and a Python dashboard displaying that data live, demonstrated at the Nov 19 showcase.
+By the end of this project, every group has:
+
+- A board that spends nearly all of its time in LLS, waking only every 5 seconds.
+- A working LPTMR-plus-LLWU wakeup sequence with a measurable current drop confirmed on real hardware.
+- An HC-05 module configured and paired with a laptop.
+- A wake-read-transmit-sleep cycle sending live accelerometer and light readings over Bluetooth.
+- A Python dashboard displaying that data live, demonstrated at the Nov 19 showcase.
 
 ## 3. Prerequisites
 

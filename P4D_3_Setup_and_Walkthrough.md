@@ -43,7 +43,9 @@ static void EnterLlsUntilWake(void)
 }
 ```
 
-`SMC_SetPowerModeLls()` doesn't return early or asynchronously; it configures the mode, executes the CPU's own low-power wait instruction, and simply doesn't return until something wakes the chip back up, at which point execution continues on the very next line, `SMC_PostExitStopModes()`, as if the function call had just taken a very long time. This is why LLS specifically (as opposed to VLLS) is the right choice for a repeating wake-read-transmit-sleep loop: nothing about the code has to handle "did we just reset, or did we just wake up," because with LLS the answer is always the latter.
+`SMC_SetPowerModeLls()` doesn't return early or asynchronously; it configures the mode, executes the CPU's own low-power wait instruction, and simply doesn't return until something wakes the chip back up, at which point execution continues on the very next line, `SMC_PostExitStopModes()`, as if the function call had just taken a very long time.
+
+This is why LLS specifically (as opposed to VLLS) is the right choice for a repeating wake-read-transmit-sleep loop: nothing about the code has to handle "did we just reset, or did we just wake up," because with LLS the answer is always the latter.
 
 **The LLWU ISR** is what actually lets this resume:
 
@@ -103,7 +105,11 @@ This is the third project in the series to need the substitute P0 first flagged 
 
 ## 12. Why This Project Doesn't Use P3's DMA Pipeline
 
-The original project concept connects this project to P3's DMA ADC work, but for a single reading taken once every 5 seconds, DMA's actual benefit (offloading a continuous, high-rate sampling stream so the CPU never has to poll for it) doesn't apply; there's no stream here to offload, just one conversion per wake. `demo_code/02_full_sensor_node_with_bluetooth/main.c` uses a direct, polled ADC read instead, the same simple pattern P1 established, which is both simpler and, for this specific use case, not actually worse than DMA in any way that matters. If a group wants to use DMA anyway for the sake of practicing it, the added complexity (a TPM-based hardware trigger, which would itself need to keep running through stop mode, adding its own clock-source considerations on top of everything else in Sections 6 to 7) is worth attempting only after the core exit criteria are solid, as a genuine extension, not a requirement.
+The original project concept connects this project to P3's DMA ADC work, but for a single reading taken once every 5 seconds, DMA's actual benefit (offloading a continuous, high-rate sampling stream so the CPU never has to poll for it) doesn't apply; there's no stream here to offload, just one conversion per wake.
+
+`demo_code/02_full_sensor_node_with_bluetooth/main.c` uses a direct, polled ADC read instead, the same simple pattern P1 established, which is both simpler and, for this specific use case, not actually worse than DMA in any way that matters.
+
+If a group wants to use DMA anyway for the sake of practicing it, the added complexity (a TPM-based hardware trigger, which would itself need to keep running through stop mode, adding its own clock-source considerations on top of everything else in Sections 6 to 7) is worth attempting only after the core exit criteria are solid, as a genuine extension, not a requirement.
 
 ## 13. Transmitting the Packet
 
@@ -125,7 +131,9 @@ pip3 install pyserial matplotlib   # once
 python3 demo_code/02_full_sensor_node_with_bluetooth/python/dashboard.py /dev/tty.HC-05-DevB
 ```
 
-(Use your paired module's actual port name; on Windows this looks like `COM7` or similar.) The script opens the port with a generous 6-second read timeout, since the board only transmits once every 5 seconds and long silent gaps between lines are completely normal, not a sign anything is wrong. It splits each line on commas, silently skips anything that isn't exactly four valid integers, and plots accelerometer X/Y/Z and the light reading side by side, live.
+(Use your paired module's actual port name; on Windows this looks like `COM7` or similar.) The script opens the port with a generous 6-second read timeout, since the board only transmits once every 5 seconds and long silent gaps between lines are completely normal, not a sign anything is wrong.
+
+It splits each line on commas, silently skips anything that isn't exactly four valid integers, and plots accelerometer X/Y/Z and the light reading side by side, live.
 
 **The CSV-parsing and rolling-window logic was unit-tested in isolation**, feeding it a mix of banner text, malformed lines, and enough valid data points to confirm the rolling window correctly evicts old points once full; the plotting itself, which depends on `matplotlib`, could not be end-to-end tested in the environment this was authored in. Bench-test the full script against a real, paired board before WS8.
 
