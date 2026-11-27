@@ -25,7 +25,7 @@ Section numbers (0-22) are kept consistent across all 4 files, so "see Section 9
 
 ## How to Use This Manual
 
-Same rule as every prior manual: a reference, not required reading. Build the sleep/wake cycle yourself first; open `demo_code/` only when stuck. This project's failure modes are unusually quiet, a stop-mode misconfiguration or a mismatched HC-05 baud rate doesn't produce an error message, it produces silence, so understanding each piece before combining them matters more here than in most projects.
+**Your main guide is the code files in `demo_code/` (01, then 02), done in order.** Each is a step-by-step file with the explanation written inside it; setup is in `P4D_3_Setup_and_Walkthrough.md`. This manual is a reference, not required reading: open it when something doesn't make sense. This project's failure modes are unusually quiet, a stop-mode misconfiguration or a mismatched HC-05 baud rate doesn't produce an error message, it produces silence, so understanding each piece before combining them matters more here than in most projects.
 
 Project leaders: bench-test both `demo_code/01_stop_mode_lptmr_wakeup/` and `demo_code/02_full_sensor_node_with_bluetooth/` on real hardware, with a real HC-05 module, before WS8. This project has no substitute for that bench test the way some earlier projects did: current draw during stop mode, LPTMR wake timing, and Bluetooth pairing all depend on real electrical and RF behavior that no amount of code review or compilation catches.
 
