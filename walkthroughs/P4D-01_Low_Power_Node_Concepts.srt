@@ -1,0 +1,68 @@
+1
+00:00:00,500 --> 00:00:06,151
+A sensor in a field runs on a battery. If it stays wide awake all day, the battery
+
+2
+00:00:06,151 --> 00:00:07,460
+drains. So it naps.
+
+3
+00:00:08,460 --> 00:00:12,906
+The alarm clock is a low power timer. The one who shakes you awake is the wake-up
+
+4
+00:00:12,906 --> 00:00:13,180
+unit.
+
+5
+00:00:13,680 --> 00:00:19,037
+The bed is a deep sleep called low leakage stop. Memory is kept, so the program
+
+6
+00:00:19,037 --> 00:00:20,800
+continues where it paused.
+
+7
+00:00:21,800 --> 00:00:27,400
+Fast clocks switch off in deep sleep. Our alarm uses a slow clock that ticks one
+
+8
+00:00:27,400 --> 00:00:30,200
+thousand times a second and keeps going.
+
+9
+00:00:30,700 --> 00:00:32,540
+How many ticks for five seconds?
+
+10
+00:00:33,040 --> 00:00:38,040
+Your turn. Pause the video.
+
+11
+00:00:38,040 --> 00:00:39,080
+Five thousand.
+
+12
+00:00:40,080 --> 00:00:45,600
+Deep sleep is locked by default, for safety. The program must unlock it first.
+
+13
+00:00:46,600 --> 00:00:54,360
+Sleep five seconds. Wake. Blink. Read tilt and light. Send. Sleep again.
+
+14
+00:00:55,360 --> 00:01:00,400
+A Bluetooth module called HC-05 turns serial text into radio.
+
+15
+00:01:00,900 --> 00:01:07,460
+Our message is simple: X, Y, Z and light, separated by commas, at 9600 speed.
+
+16
+00:01:08,460 --> 00:01:13,481
+One device's send wire goes to the other's receive wire. Like two people: one's
+
+17
+00:01:13,481 --> 00:01:15,260
+mouth faces the other's ear.
+

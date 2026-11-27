@@ -1,0 +1,13 @@
+0:00 What we are building
+0:06 Files and drivers
+0:11 The includes, lines 85 to 96
+0:24 Step 1, numbers, lines 120 to 124
+0:36 Step 2, sleep again, lines 155 to 188
+0:58 Step 3, tilt, lines 222 to 307
+1:23 Step 4, light, lines 334 to 358
+1:38 Step 5, Bluetooth, lines 403 to 424
+2:08 Step 6, ready, lines 455 to 469
+2:19 Step 7, start parts, lines 493 to 495
+2:25 Step 8, the cycle, lines 531 to 546
+2:47 Test, then go wireless
+3:07 Experiments

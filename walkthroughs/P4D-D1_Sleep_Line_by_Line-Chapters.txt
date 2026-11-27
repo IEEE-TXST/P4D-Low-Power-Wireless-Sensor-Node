@@ -1,0 +1,11 @@
+0:00 What we are building
+0:07 Files and drivers
+0:16 The includes, lines 81 to 88
+0:25 Step 1, lines 128 to 141
+1:00 Step 2, the alarm, lines 180 to 193
+1:41 Step 3, sleep, lines 229 to 237
+2:05 Step 4, hello, lines 270 to 277
+2:15 Step 5, prepare, lines 310 to 318
+2:30 Step 6, the cycle, lines 352 to 361
+2:49 Run it
+2:56 Experiments

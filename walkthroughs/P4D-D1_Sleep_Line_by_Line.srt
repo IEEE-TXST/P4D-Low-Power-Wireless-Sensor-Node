@@ -1,0 +1,140 @@
+1
+00:00:00,500 --> 00:00:06,980
+The board sleeps for five seconds, wakes, blinks, reports, and sleeps again.
+
+2
+00:00:07,980 --> 00:00:13,222
+Check the three drivers and paste both files. A sleeping chip may lose contact with
+
+3
+00:00:13,222 --> 00:00:16,380
+the loading tool. Press Reset, or ask your leader.
+
+4
+00:00:17,380 --> 00:00:24,169
+Line 86 is the low power timer. Line 87 is the wake up unit. Line 88 controls sleep
+
+5
+00:00:24,169 --> 00:00:24,660
+modes.
+
+6
+00:00:25,660 --> 00:00:29,900
+Switch on lines 128 to 141.
+
+7
+00:00:30,400 --> 00:00:38,080
+Line 128: sleep five seconds. Line 129: the timer is wake source number zero.
+
+8
+00:00:38,580 --> 00:00:42,020
+Line 131 counts wakes.
+
+9
+00:00:42,520 --> 00:00:52,280
+Line 133 runs after waking. Line 135 asks whether the timer caused it.
+
+10
+00:00:52,780 --> 00:00:59,500
+Lines 137 to 139 disable its interrupt, clear its flag, and stop it.
+
+11
+00:01:00,500 --> 00:01:03,940
+Switch on lines 180 to 193.
+
+12
+00:01:04,440 --> 00:01:09,320
+Line 184 loads default settings.
+
+13
+00:01:09,820 --> 00:01:18,780
+Line 185 picks the slow clock, 1000 ticks a second. Line 186 counts it directly.
+
+14
+00:01:19,280 --> 00:01:25,360
+Line 189 sets the period: 1000 times the seconds, minus one.
+
+15
+00:01:25,860 --> 00:01:31,380
+Lines 191 and 192 let the timer wake the chip.
+
+16
+00:01:31,880 --> 00:01:33,880
+For two seconds, what is the period number?
+
+17
+00:01:34,380 --> 00:01:39,380
+Your turn. Pause the video.
+
+18
+00:01:39,380 --> 00:01:40,740
+1999.
+
+19
+00:01:41,740 --> 00:01:45,580
+Switch on lines 229 to 237.
+
+20
+00:01:46,080 --> 00:01:51,360
+Lines 231 and 232 arm and start the timer.
+
+21
+00:01:51,860 --> 00:01:55,060
+Line 234 prepares for sleep.
+
+22
+00:01:55,560 --> 00:02:01,240
+Line 235 sleeps. This single line takes about five real seconds.
+
+23
+00:02:01,740 --> 00:02:05,100
+Line 236 tidies up after waking.
+
+24
+00:02:06,100 --> 00:02:14,500
+Switch on lines 270 to 277. They wake the board and print a banner.
+
+25
+00:02:15,500 --> 00:02:18,380
+Switch on lines 310 to 318.
+
+26
+00:02:18,880 --> 00:02:23,360
+Lines 310 to 314 make red an output, starting off.
+
+27
+00:02:23,860 --> 00:02:30,260
+Line 316 unlocks the deep sleep modes. Line 318 sets the alarm.
+
+28
+00:02:31,260 --> 00:02:35,260
+Switch on lines 352 to 361.
+
+29
+00:02:35,760 --> 00:02:41,760
+Line 354 sleeps. Line 356 counts the wake.
+
+30
+00:02:42,260 --> 00:02:49,220
+Line 358 flips the light. Line 360 prints the number and elapsed seconds.
+
+31
+00:02:50,220 --> 00:02:54,778
+Build, load, press Reset, and time it with your phone. A new line should arrive
+
+32
+00:02:54,778 --> 00:02:56,220
+about every five seconds.
+
+33
+00:02:57,220 --> 00:03:02,020
+On line 128, try two seconds, then ten.
+
+34
+00:03:02,520 --> 00:03:07,896
+With your leader, compare the current while asleep and awake. You now understand low
+
+35
+00:03:07,896 --> 00:03:09,560
+power sleep, line by line.
+

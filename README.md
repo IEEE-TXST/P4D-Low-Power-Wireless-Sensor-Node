@@ -6,6 +6,16 @@ IEEE TXST Student Branch, Fall 2026 FRDM-KL26Z project series. Capstone option, 
 
 **Platform:** NXP FRDM-KL26Z (ARM Cortex-M0+, 48 MHz, 128 KB Flash) with an HC-05 Bluetooth module (roughly $6, shared, pre-configured before build day). Prerequisite: P1 (UART, I2C, ADC), P2 (scheduler, sleep/wake state machine), P3 (DMA ADC) complete.
 
+## Watch and build
+
+Watch in order. See [the walkthrough notes](walkthroughs/README.md) before you start.
+
+| Order | Video | Length | Code used |
+| ---: | --- | ---: | --- |
+| 1 | [Ideas: the sleepy sensor](walkthroughs/P4D-01_Low_Power_Node_Concepts.mp4) | 1:17 |  |
+| 2 | [Demo 1: sleep and wake](walkthroughs/P4D-D1_Sleep_Line_by_Line.mp4) | 3:11 | [01_stop_mode_lptmr_wakeup](demo_code/01_stop_mode_lptmr_wakeup) |
+| 3 | [Demo 2: wireless sensor](walkthroughs/P4D-D2_Wireless_Line_by_Line.mp4) | 3:31 | [02_full_sensor_node_with_bluetooth](demo_code/02_full_sensor_node_with_bluetooth) |
+
 ## What this project is
 
 Members build a wireless sensor node that wakes from ARM LLS (Low Leakage Stop) on a periodic LPTMR timer, reads the accelerometer and a light sensor, transmits a data packet over UART to an HC-05 Bluetooth module, then returns to sleep. A Python script on a paired laptop receives the data over Bluetooth and plots a live dashboard. Current consumption visibly drops between transmissions. This is the architecture of every battery-operated IoT sensor, from industrial monitors to medical wearables, and it integrates P2's scheduler concepts (as a sleep/wake state machine) with P3's ADC pipeline ideas.
