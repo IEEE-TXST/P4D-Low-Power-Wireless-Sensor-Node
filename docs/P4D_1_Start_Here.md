@@ -4,7 +4,7 @@
 **Document status:** DRAFT v0.1, for project-leader review and bench testing before member use
 **Track:** Embedded Systems | **Difficulty:** Hard | **Sessions:** 1 (WS8, Nov 5, 2026), plus independent build before the Nov 19 demo
 **Groups:** 2 groups of 3, working independently
-**Companion documents:** P0's manual (`P0_Board_Orientation_and_Toolchain_Setup/`, start at `P0_1_Start_Here.md`) through P3's manual (`P3_DMA_ADC_FIR_Filter/`) (read all four first), *TXST IEEE FRDM-KL26Z Project Specification*
+**Companion documents:** P0's manual (`P0_Board_Orientation_and_Toolchain_Setup/docs/`, start at `P0_1_Start_Here.md`) through P3's manual (`P3_DMA_ADC_FIR_Filter/`) (read all four first), *TXST IEEE FRDM-KL26Z Project Specification*
 **Hardware:** FRDM-KL26Z plus an HC-05 Bluetooth module (roughly $6, shared per group; pre-configure before WS8, Section 9)
 **Demo code:** see `demo_code/` in this project's folder
 

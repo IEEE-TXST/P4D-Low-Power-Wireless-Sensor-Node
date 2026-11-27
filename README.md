@@ -26,7 +26,8 @@ Board enters LLS stop mode between transmissions. LPTMR wakes the board every 5 
 
 ## Repo layout
 
-- `P4D_1_Start_Here.md` through `P4D_4_Reference.md`: the Project Manual, split into four files.
+- [`P4D_Project_Manual.pdf`](P4D_Project_Manual.pdf): the whole Project Manual in one file, for reading or printing.
+- [`docs/`](docs/): the same manual as four Markdown files, `P4D_1_Start_Here.md` through `P4D_4_Reference.md`.
 - `demo_code/01_stop_mode_lptmr_wakeup/`: proves the sleep/wake cycle alone, no sensors or Bluetooth yet. Wakes every 5 seconds on an LPTMR/LLWU event, blinks the LED, prints a wake counter, goes back to sleep.
 - `demo_code/02_full_sensor_node_with_bluetooth/`: the full node. Every 5 seconds: wake, read the accelerometer and light sensor, transmit one CSV line over UART1 to the HC-05, sleep again.
   - `python/dashboard.py`: live matplotlib dashboard receiving data over the paired Bluetooth serial port.
@@ -34,7 +35,9 @@ Board enters LLS stop mode between transmissions. LPTMR wakes the board every 5 
 
 ## Getting started
 
-Read `P4D_1_Start_Here.md` first, then `P4D_3_Setup_and_Walkthrough.md`. Get Session 1's sleep/wake cycle solid, and measure the current drop yourself on the board's current-measurement jumper, before adding sensors or the HC-05.
+**Manual:** [open the PDF](P4D_Project_Manual.pdf), or [read it here on GitHub](docs/P4D_1_Start_Here.md).
+
+Read [`P4D_1_Start_Here.md`](docs/P4D_1_Start_Here.md) first, then [`P4D_3_Setup_and_Walkthrough.md`](docs/P4D_3_Setup_and_Walkthrough.md). Get Session 1's sleep/wake cycle solid, and measure the current drop yourself on the board's current-measurement jumper, before adding sensors or the HC-05.
 
 ## Resume line
 
